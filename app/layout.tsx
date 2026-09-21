@@ -5,8 +5,9 @@ import './globals.css';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: "Cole's Detailing | Mobile Car Detailing Oakland, Wayne & Macomb",
-  description: "Professional mobile car detailing. We come to you. Ceramic coating, interior deep clean, stain removal. Serving Oakland, Wayne, and Macomb County.",
+  title: "Maple Leaf Detail & Restoration LLC | Mobile Car Detailing in Ballwin, MO",
+  description: "6 years of professional detailing experience. Interior/exterior details, paint correction, ceramic coating, ozone odor removal. Serving Ballwin and Greater St. Louis. Call (636) 284-8461.",
+  keywords: ["car detailing Ballwin", "auto detailing St. Louis", "paint correction Ballwin", "ceramic coating Ballwin", "mobile detailing Ballwin MO"],
 };
 
 export default function RootLayout({
