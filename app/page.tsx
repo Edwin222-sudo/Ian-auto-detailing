@@ -1,66 +1,63 @@
+
 "use client";
 
 import { useState } from 'react';
 import Image from 'next/image';
-
-// --- DATA FROM CRAIGSLIST AD ---
-const pricingData = {
-  fullService: [
-    { type: "Cars", price: 230 },
-    { type: "Trucks & SUVs", price: 270 },
-    { type: "Vans & Commercial", price: 300 },
-  ],
-  interiorOnly: [
-    { type: "Car", price: 120 },
-    { type: "Truck/SUV", price: 150 },
-  ],
-  exteriorOnly: [
-    { type: "Car", price: 80 },
-    { type: "Truck/SUV", price: 100 },
-  ],
-  restoration: [
-    { type: "Car (Starting at)", price: 400 },
-    { type: "Truck/SUV (Starting at)", price: 600 },
-  ],
-  addOns: [
-    { name: "Ceramic Coating", price: "800-1200" },
-    { name: "Ceramic Wax / Soft Ceramic", price: 15 },
-    { name: "Headlight Restoration", price: 75 },
-    { name: "Glass Coating", price: 200 },
-    { name: "Trim Restore", price: 50 },
-    { name: "Leather Restore", price: "25-100" },
-    { name: "Engine Bay Cleaning", price: 50 },
-    { name: "Carpet Recolor", price: "50-300" },
-    { name: "Scratch Correction", price: "200-250" },
-    { name: "Small Glass Crack Repair", price: "20-60" },
-    { name: "Iron/Rust Removal", price: "20+" },
-    { name: "Full Tire Dressing", price: 35 },
-    { name: "Tire Lettering", price: "200-300" },
-    { name: "Paint Decontamination", price: 35 },
-    { name: "Heavy Stain Removal", price: "30-50" },
-    { name: "Biohazard (Urine/Mold)", price: "15-30" },
-  ]
-};
+import {
+  business,
+  pricing,
+  services,
+  gallery,
+  whyChooseUs,
+  howItWorks,
+  booking,
+} from './data';
 
 export default function Home() {
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
     vehicle: '',
-    service: 'Full Service Detail',
+    service: booking.serviceOptions[0],
     date: '',
     time: '',
-    notes: ''
+    notes: '',
   });
+  const [status, setStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle');
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // In a real app, this would send an email or API request to a database
-    alert(`Thanks ${formData.name}! We received your request for a ${formData.service} on your ${formData.vehicle}. We will text you at ${formData.phone} to confirm.`);
+    setStatus('sending');
+
+    try {
+      const response = await fetch('https://api.web3forms.com/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify({
+          access_key: booking.web3formsKey,
+          subject: `New Booking: ${formData.service} — ${formData.vehicle}`,
+          from_name: `${business.shortName} Website`,
+          ...formData,
+        }),
+      });
+      const result = await response.json();
+      if (result.success) {
+        setStatus('success');
+        setFormData({
+          name: '', phone: '', vehicle: '',
+          service: booking.serviceOptions[0],
+          date: '', time: '', notes: '',
+        });
+      } else {
+        setStatus('error');
+      }
+    } catch {
+      setStatus('error');
+    }
   };
 
   return (
@@ -68,233 +65,307 @@ export default function Home() {
       {/* NAVIGATION */}
       <nav className="fixed w-full z-50 bg-black/80 backdrop-blur-md border-b border-red-900/50">
         <div className="container mx-auto px-6 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold tracking-tighter text-brand-red uppercase">Cole's Detailing</h1>
+          <h1 className="text-xl md:text-2xl font-bold tracking-tighter text-brand uppercase">
+            {business.shortName}
+          </h1>
           <div className="hidden md:flex gap-6 text-sm font-medium">
-            <a href="#services" className="hover:text-brand-red transition">Services</a>
-            <a href="#pricing" className="hover:text-brand-red transition">Pricing</a>
-            <a href="#gallery" className="hover:text-brand-red transition">Gallery</a>
-            <a href="#book" className="bg-brand-red px-4 py-2 rounded hover:bg-red-700 transition">Book Now</a>
+            <a href="#about" className="hover:text-brand transition">About</a>
+            <a href="#services" className="hover:text-brand transition">Services</a>
+            <a href="#pricing" className="hover:text-brand transition">Pricing</a>
+            <a href="#gallery" className="hover:text-brand transition">Gallery</a>
+            <a href="#book" className="bg-brand px-4 py-2 rounded hover:bg-brand-dark transition">Book Now</a>
           </div>
-          <a href="tel:2484805603" className="md:hidden bg-brand-red px-3 py-1 rounded text-sm">Call Now</a>
+          <a href={`tel:${business.phone.replace(/\D/g, '')}`} className="md:hidden bg-brand px-3 py-1 rounded text-sm">Call Now</a>
         </div>
       </nav>
 
-      {/* HERO SECTION */}
+      {/* HERO */}
       <section className="relative h-screen flex items-center justify-center pt-20">
         <div className="absolute inset-0 z-0">
-          {/* Placeholder for the image you provided */}
-          <div className="w-full h-full bg-[url('https://images.unsplash.com/photo-1601362840469-51e4d8d58785?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center opacity-40"></div>
+          <div className="w-full h-full bg-[url('/hero.jpg')] bg-cover bg-center opacity-40"></div>
           <div className="absolute inset-0 bg-gradient-to-t from-neutral-900 via-transparent to-neutral-900"></div>
         </div>
-        
+
         <div className="relative z-10 text-center px-4 max-w-4xl mx-auto">
-          <h2 className="text-brand-red font-bold tracking-widest uppercase mb-2">Mobile Detailing We Come To You</h2>
-          <h1 className="text-5xl md:text-7xl font-extrabold mb-6">Premium Auto Care <br/>At Your Doorstep</h1>
-          <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
-            Serving Oakland, Wayne, and Macomb County. Specializing in Ceramic Coating, Deep Interior Cleaning, and Heavy Stain Removal.
+          <h2 className="text-brand font-bold tracking-widest uppercase mb-2">
+            {business.tagline}
+          </h2>
+          <h1 className="text-4xl md:text-7xl font-extrabold mb-6">
+            {business.hero.headline}
+          </h1>
+          <p className="text-lg md:text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
+            {business.hero.subheadline}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <a href="#book" className="bg-brand-red text-white px-8 py-4 rounded-md font-bold text-lg hover:bg-red-700 transition shadow-lg shadow-red-900/50">
-              Book Appointment
+            <a href="#book" className="bg-brand text-white px-8 py-4 rounded-md font-bold text-lg hover:bg-brand-dark transition shadow-lg">
+              {business.hero.ctaPrimary}
             </a>
-            <a href="sms:2484805603" className="bg-white text-black px-8 py-4 rounded-md font-bold text-lg hover:bg-gray-200 transition">
-              Text for Quote: 248-480-5603
+            <a href={`sms:${business.phone.replace(/\D/g, '')}`} className="bg-white text-black px-8 py-4 rounded-md font-bold text-lg hover:bg-gray-200 transition">
+              {business.hero.ctaSecondary}: {business.phone}
             </a>
           </div>
         </div>
       </section>
 
       {/* INFO BANNER */}
-      <div className="bg-brand-red py-4">
-        <div className="container mx-auto px-6 text-center font-bold text-lg">
-          CALL OR TEXT NOW FOR PRICES AND SCHEDULING: 248-480-5603
+      <div className="bg-brand py-4">
+        <div className="container mx-auto px-6 text-center font-bold text-base md:text-lg">
+          CALL OR TEXT NOW FOR PRICES AND SCHEDULING: {business.phone}
         </div>
       </div>
 
-      {/* SERVICES SECTION */}
+      {/* ABOUT SECTION */}
+      <section id="about" className="py-20 bg-neutral-900">
+        <div className="container mx-auto px-6 max-w-5xl">
+          <h2 className="text-4xl font-bold mb-4 text-center">
+            Meet <span className="text-brand">Ian</span>
+          </h2>
+          <p className="text-center text-gray-400 mb-12">{business.about.headline}</p>
+
+          <div className="grid md:grid-cols-2 gap-10 items-center">
+            <div className="aspect-square bg-neutral-800 rounded-xl flex items-center justify-center text-gray-600">
+              {/* Replace with Ian's photo */}
+              Ian's Photo
+            </div>
+            <div>
+              <p className="text-gray-300 leading-relaxed mb-6">{business.about.body}</p>
+              <ul className="space-y-2">
+                {business.about.highlights.map((item, idx) => (
+                  <li key={idx} className="flex items-start gap-2 text-sm text-gray-300">
+                    <span className="text-brand font-bold">✓</span>
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* WHY CHOOSE US */}
+      <section className="py-20 bg-black">
+        <div className="container mx-auto px-6">
+          <h2 className="text-4xl font-bold mb-12 text-center">Why <span className="text-brand">Maple Leaf</span></h2>
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {whyChooseUs.map((item, idx) => (
+              <div key={idx} className="bg-neutral-900 p-6 rounded-xl border border-neutral-800">
+                <h3 className="text-lg font-bold mb-2 text-brand">{item.title}</h3>
+                <p className="text-sm text-gray-400">{item.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* SERVICES */}
       <section id="services" className="py-20 bg-neutral-900">
         <div className="container mx-auto px-6">
-          <h2 className="text-4xl font-bold mb-12 text-center">Our <span className="text-brand-red">Services</span></h2>
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="bg-neutral-800 p-8 rounded-xl border border-neutral-700 hover:border-brand-red transition">
-              <h3 className="text-2xl font-bold mb-4">Full Service Detail</h3>
-              <p className="text-gray-400 mb-4">Complete interior and exterior restoration. Vacuum, wipe down, power scrub, deep clean fabric/leather, UV protection, power wash, wheel cleaning, and hydrophobic glass application.</p>
-              <ul className="text-sm text-gray-300 space-y-2">
-                <li>✓ Interior Deep Clean</li>
-                <li>✓ Exterior Power Wash</li>
-                <li>✓ UV Protection</li>
-              </ul>
-            </div>
-            <div className="bg-neutral-800 p-8 rounded-xl border border-neutral-700 hover:border-brand-red transition">
-              <h3 className="text-2xl font-bold mb-4">Ceramic Coating</h3>
-              <p className="text-gray-400 mb-4">Long-lasting protection for your paint. Options range from soft ceramic wax to full professional ceramic coating.</p>
-              <ul className="text-sm text-gray-300 space-y-2">
-                <li>✓ Ceramic Wax ($15)</li>
-                <li>✓ Full Ceramic ($800-1200)</li>
-                <li>✓ Glass Coating ($200)</li>
-              </ul>
-            </div>
-            <div className="bg-neutral-800 p-8 rounded-xl border border-neutral-700 hover:border-brand-red transition">
-              <h3 className="text-2xl font-bold mb-4">Restoration & Add-ons</h3>
-              <p className="text-gray-400 mb-4">Heavy duty cleaning for abandoned vehicles or specific problem areas like headlights, engines, and stains.</p>
-              <ul className="text-sm text-gray-300 space-y-2">
-                <li>✓ Headlight Restoration ($75)</li>
-                <li>✓ Engine Bay ($50)</li>
-                <li>✓ Stain Removal ($30-50)</li>
-              </ul>
-            </div>
+          <h2 className="text-4xl font-bold mb-12 text-center">Our <span className="text-brand">Services</span></h2>
+          <div className="grid md:grid-cols-2 gap-8">
+            {services.map((service, idx) => (
+              <div key={idx} className="bg-neutral-800 p-8 rounded-xl border border-neutral-700 hover:border-brand transition">
+                <h3 className="text-2xl font-bold mb-4">{service.title}</h3>
+                <p className="text-gray-400 mb-4">{service.description}</p>
+                <ul className="text-sm text-gray-300 space-y-2">
+                  {service.features.map((f, i) => (
+                    <li key={i}>✓ {f}</li>
+                  ))}
+                </ul>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* PRICING SECTION */}
+      {/* PRICING */}
       <section id="pricing" className="py-20 bg-black">
         <div className="container mx-auto px-6">
-          <h2 className="text-4xl font-bold mb-12 text-center">Transparent <span className="text-brand-red">Pricing</span></h2>
-          
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
-            {/* Full Service */}
-            <div className="bg-neutral-900 p-6 rounded-lg border-t-4 border-brand-red">
-              <h3 className="text-xl font-bold mb-4">Full Service Detail</h3>
-              {pricingData.fullService.map((item, idx) => (
-                <div key={idx} className="flex justify-between py-2 border-b border-neutral-800">
+          <h2 className="text-4xl font-bold mb-12 text-center">Transparent <span className="text-brand">Pricing</span></h2>
+
+          <div className="grid md:grid-cols-2 gap-8 mb-12 max-w-4xl mx-auto">
+            <div className="bg-neutral-900 p-8 rounded-xl border-t-4 border-brand">
+              <h3 className="text-2xl font-bold mb-6">Complete Detail</h3>
+              <p className="text-sm text-gray-400 mb-4">Interior + Exterior</p>
+              {pricing.complete.map((item, idx) => (
+                <div key={idx} className="flex justify-between py-3 border-b border-neutral-800">
                   <span>{item.type}</span>
-                  <span className="font-bold text-brand-red">${item.price}</span>
+                  <span className="font-bold text-brand text-xl">${item.price}</span>
                 </div>
               ))}
             </div>
-
-            {/* Interior Only */}
-            <div className="bg-neutral-900 p-6 rounded-lg border-t-4 border-gray-600">
-              <h3 className="text-xl font-bold mb-4">Interior Only</h3>
-              {pricingData.interiorOnly.map((item, idx) => (
-                <div key={idx} className="flex justify-between py-2 border-b border-neutral-800">
+            <div className="bg-neutral-900 p-8 rounded-xl border-t-4 border-gray-600">
+              <h3 className="text-2xl font-bold mb-6">Interior Only</h3>
+              <p className="text-sm text-gray-400 mb-4">Deep clean inside</p>
+              {pricing.interiorOnly.map((item, idx) => (
+                <div key={idx} className="flex justify-between py-3 border-b border-neutral-800">
                   <span>{item.type}</span>
-                  <span className="font-bold text-brand-red">${item.price}</span>
+                  <span className="font-bold text-brand text-xl">${item.price}</span>
                 </div>
               ))}
-            </div>
-
-            {/* Exterior Only */}
-            <div className="bg-neutral-900 p-6 rounded-lg border-t-4 border-gray-600">
-              <h3 className="text-xl font-bold mb-4">Exterior Only</h3>
-              {pricingData.exteriorOnly.map((item, idx) => (
-                <div key={idx} className="flex justify-between py-2 border-b border-neutral-800">
-                  <span>{item.type}</span>
-                  <span className="font-bold text-brand-red">${item.price}</span>
-                </div>
-              ))}
-            </div>
-
-            {/* Restoration */}
-            <div className="bg-neutral-900 p-6 rounded-lg border-t-4 border-yellow-600">
-              <h3 className="text-xl font-bold mb-4">Heavy Restoration</h3>
-              {pricingData.restoration.map((item, idx) => (
-                <div key={idx} className="flex justify-between py-2 border-b border-neutral-800">
-                  <span>{item.type}</span>
-                  <span className="font-bold text-brand-red">${item.price}+</span>
-                </div>
-              ))}
-              <p className="text-xs text-gray-500 mt-2">Price varies by restoration needed.</p>
             </div>
           </div>
 
-          {/* Add-ons Table */}
-          <div className="bg-neutral-900 rounded-lg p-8">
-            <h3 className="text-2xl font-bold mb-6 text-center">Optional Services & Add-Ons</h3>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-x-12 gap-y-4">
-              {pricingData.addOns.map((item, idx) => (
+          {/* Add-ons */}
+          <div className="bg-neutral-900 rounded-xl p-8 max-w-4xl mx-auto mb-8">
+            <h3 className="text-2xl font-bold mb-6 text-center">Add-Ons & Specialty Services</h3>
+            <div className="grid md:grid-cols-2 gap-x-12 gap-y-3">
+              {pricing.addOns.map((item, idx) => (
                 <div key={idx} className="flex justify-between py-2 border-b border-neutral-800 text-sm">
                   <span className="text-gray-300">{item.name}</span>
-                  <span className="font-bold text-white">${item.price}</span>
+                  <span className="font-bold text-white">
+                    {item.price === 'Ask' ? 'Ask Ian' : item.price === 'Included' ? 'Included' : `$${item.price}`}
+                  </span>
                 </div>
               ))}
             </div>
           </div>
+
+          {/* Discount Banner */}
+          {pricing.discounts.map((d, idx) => (
+            <div key={idx} className="max-w-4xl mx-auto bg-gradient-to-r from-brand to-brand-dark rounded-xl p-8 text-center">
+              <span className="inline-block bg-white text-brand font-black px-4 py-1 rounded-full text-sm mb-3">
+                {d.badge}
+              </span>
+              <h3 className="text-2xl font-bold mb-2 text-white">{d.title}</h3>
+              <p className="text-white/90">{d.description}</p>
+            </div>
+          ))}
         </div>
       </section>
 
-      {/* GALLERY SECTION */}
-      <section id="gallery" className="py-20 bg-neutral-900">
+      {/* HOW IT WORKS */}
+      <section className="py-20 bg-neutral-900">
         <div className="container mx-auto px-6">
-          <h2 className="text-4xl font-bold mb-12 text-center">Our <span className="text-brand-red">Work</span></h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {/* Replace these divs with <Image /> tags of your actual work */}
-            <div className="aspect-square bg-neutral-800 rounded-lg flex items-center justify-center text-gray-600">Before/After 1</div>
-            <div className="aspect-square bg-neutral-800 rounded-lg flex items-center justify-center text-gray-600">Before/After 2</div>
-            <div className="aspect-square bg-neutral-800 rounded-lg flex items-center justify-center text-gray-600">Before/After 3</div>
-            <div className="aspect-square bg-neutral-800 rounded-lg flex items-center justify-center text-gray-600">Before/After 4</div>
+          <h2 className="text-4xl font-bold mb-12 text-center">How It <span className="text-brand">Works</span></h2>
+          <div className="grid md:grid-cols-4 gap-6">
+            {howItWorks.map((item, idx) => (
+              <div key={idx} className="bg-neutral-800 p-6 rounded-xl border border-neutral-700 text-center">
+                <div className="w-12 h-12 bg-brand rounded-full flex items-center justify-center mx-auto mb-4 font-bold text-xl">
+                  {item.step}
+                </div>
+                <h3 className="text-lg font-bold mb-2">{item.title}</h3>
+                <p className="text-sm text-gray-400">{item.description}</p>
+              </div>
+            ))}
           </div>
-          <p className="text-center text-gray-500 mt-6">Photos of recent details in Oakland, Wayne & Macomb County.</p>
         </div>
       </section>
 
-      {/* BOOKING SECTION */}
-      <section id="book" className="py-20 bg-black">
+      {/* GALLERY */}
+      <section id="gallery" className="py-20 bg-black">
+        <div className="container mx-auto px-6">
+          <h2 className="text-4xl font-bold mb-4 text-center">
+            Before & <span className="text-brand">After</span>
+          </h2>
+          <p className="text-center text-gray-400 mb-12">
+            Real results from real customers in {business.serviceAreas[0]} and beyond.
+          </p>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {gallery.map((item, idx) => (
+              <div key={idx} className="bg-neutral-800 rounded-xl overflow-hidden">
+                <div className="grid grid-cols-2">
+                  <div className="relative aspect-square">
+                    <Image src={item.before} alt={`Before ${item.title}`} fill className="object-cover" />
+                    <span className="absolute top-2 left-2 bg-black/70 text-xs font-bold px-2 py-1 rounded">BEFORE</span>
+                  </div>
+                  <div className="relative aspect-square">
+                    <Image src={item.after} alt={`After ${item.title}`} fill className="object-cover" />
+                    <span className="absolute top-2 left-2 bg-brand text-xs font-bold px-2 py-1 rounded">AFTER</span>
+                  </div>
+                </div>
+                <div className="p-4">
+                  <p className="font-bold">{item.title}</p>
+                  <p className="text-sm text-gray-400">{item.vehicle}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="text-center mt-10">
+            <a href={business.facebook} target="_blank" rel="noopener noreferrer" className="inline-block bg-brand text-white px-8 py-4 rounded-md font-bold hover:bg-brand-dark transition">
+              See More Work on Facebook →
+            </a>
+          </div>
+        </div>
+      </section>
+
+      {/* BOOKING */}
+      <section id="book" className="py-20 bg-neutral-900">
         <div className="container mx-auto px-6 max-w-4xl">
-          <h2 className="text-4xl font-bold mb-4 text-center">Book Your <span className="text-brand-red">Detail</span></h2>
-          <p className="text-center text-gray-400 mb-12">Fill out the form below to request a quote and schedule. We will text you back to confirm.</p>
-          
-          <form onSubmit={handleSubmit} className="grid md:grid-cols-2 gap-6 bg-neutral-900 p-8 rounded-xl border border-neutral-800">
+          <h2 className="text-4xl font-bold mb-4 text-center">Book Your <span className="text-brand">Detail</span></h2>
+          <p className="text-center text-gray-400 mb-4">
+            Fill out the form below or call/text Ian directly at {business.phone}.
+          </p>
+          <p className="text-center text-gray-500 text-sm mb-12">{business.hours}</p>
+
+          <form onSubmit={handleSubmit} className="grid md:grid-cols-2 gap-6 bg-neutral-800 p-8 rounded-xl border border-neutral-700">
             <div className="space-y-2">
               <label className="text-sm font-bold text-gray-400">Full Name</label>
-              <input required name="name" onChange={handleChange} type="text" className="w-full bg-black border border-neutral-700 rounded p-3 text-white focus:border-brand-red outline-none" placeholder="John Doe" />
+              <input required name="name" value={formData.name} onChange={handleChange} type="text" className="w-full bg-black border border-neutral-700 rounded p-3 text-white focus:border-brand outline-none" placeholder="John Doe" />
             </div>
             <div className="space-y-2">
               <label className="text-sm font-bold text-gray-400">Phone Number</label>
-              <input required name="phone" onChange={handleChange} type="tel" className="w-full bg-black border border-neutral-700 rounded p-3 text-white focus:border-brand-red outline-none" placeholder="248-480-5603" />
+              <input required name="phone" value={formData.phone} onChange={handleChange} type="tel" className="w-full bg-black border border-neutral-700 rounded p-3 text-white focus:border-brand outline-none" placeholder="(636) 555-1234" />
             </div>
-            
+
             <div className="space-y-2 md:col-span-2">
-              <label className="text-sm font-bold text-gray-400">Vehicle (Year, Make, Model)</label>
-              <input required name="vehicle" onChange={handleChange} type="text" className="w-full bg-black border border-neutral-700 rounded p-3 text-white focus:border-brand-red outline-none" placeholder="e.g. 2018 Ford F-150" />
+              <label className="text-sm font-bold text-gray-400">Vehicle (Year, Make, Model, Size)</label>
+              <input required name="vehicle" value={formData.vehicle} onChange={handleChange} type="text" className="w-full bg-black border border-neutral-700 rounded p-3 text-white focus:border-brand outline-none" placeholder="e.g. 2019 Honda CR-V (Mid-size SUV)" />
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-bold text-gray-400">Service Type</label>
-              <select name="service" onChange={handleChange} className="w-full bg-black border border-neutral-700 rounded p-3 text-white focus:border-brand-red outline-none">
-                <option>Full Service Detail</option>
-                <option>Interior Only</option>
-                <option>Exterior Only</option>
-                <option>Ceramic Coating</option>
-                <option>Heavy Restoration</option>
-                <option>Other (Specify in notes)</option>
+              <label className="text-sm font-bold text-gray-400">Service Requested</label>
+              <select name="service" value={formData.service} onChange={handleChange} className="w-full bg-black border border-neutral-700 rounded p-3 text-white focus:border-brand outline-none">
+                {booking.serviceOptions.map((opt) => <option key={opt}>{opt}</option>)}
               </select>
             </div>
-            
+
             <div className="space-y-2">
               <label className="text-sm font-bold text-gray-400">Preferred Date</label>
-              <input required name="date" onChange={handleChange} type="date" className="w-full bg-black border border-neutral-700 rounded p-3 text-white focus:border-brand-red outline-none" />
+              <input required name="date" value={formData.date} onChange={handleChange} type="date" className="w-full bg-black border border-neutral-700 rounded p-3 text-white focus:border-brand outline-none" />
             </div>
 
             <div className="space-y-2">
               <label className="text-sm font-bold text-gray-400">Preferred Time</label>
-              <input required name="time" onChange={handleChange} type="time" className="w-full bg-black border border-neutral-700 rounded p-3 text-white focus:border-brand-red outline-none" />
+              <input required name="time" value={formData.time} onChange={handleChange} type="time" className="w-full bg-black border border-neutral-700 rounded p-3 text-white focus:border-brand outline-none" />
             </div>
 
             <div className="space-y-2 md:col-span-2">
-              <label className="text-sm font-bold text-gray-400">Additional Notes / Order Request</label>
-              <textarea name="notes" onChange={handleChange} rows={3} className="w-full bg-black border border-neutral-700 rounded p-3 text-white focus:border-brand-red outline-none" placeholder="Mention any heavy stains, pet hair, or specific add-ons you want."></textarea>
+              <label className="text-sm font-bold text-gray-400">Additional Notes</label>
+              <textarea name="notes" value={formData.notes} onChange={handleChange} rows={3} className="w-full bg-black border border-neutral-700 rounded p-3 text-white focus:border-brand outline-none" placeholder="Pet hair, smoke smell, scratches, etc."></textarea>
             </div>
 
-            <button type="submit" className="md:col-span-2 bg-brand-red text-white font-bold text-lg py-4 rounded hover:bg-red-700 transition">
-              Request Quote & Booking
+            <button type="submit" disabled={status === 'sending'} className="md:col-span-2 bg-brand text-white font-bold text-lg py-4 rounded hover:bg-brand-dark transition disabled:opacity-50">
+              {status === 'sending' ? 'Sending...' : 'Request Booking'}
             </button>
+
+            {status === 'success' && (
+              <div className="md:col-span-2 bg-green-900/50 border border-green-600 text-green-200 p-4 rounded text-center">
+                ✅ Sent! Ian will get back to you ASAP.
+              </div>
+            )}
+            {status === 'error' && (
+              <div className="md:col-span-2 bg-red-900/50 border border-red-600 text-red-200 p-4 rounded text-center">
+                ❌ Something went wrong. Please call or text Ian directly at {business.phone}.
+              </div>
+            )}
+
             <p className="text-xs text-center text-gray-500 md:col-span-2 mt-2">
-              By submitting, you agree to be contacted via text/call. We accept Cash, Venmo, Zelle, Cash App.
+              Serving {business.serviceAreas.join(" • ")}
             </p>
           </form>
         </div>
       </section>
 
       {/* FOOTER */}
-      <footer className="bg-neutral-950 py-12 border-t border-neutral-800 text-center text-gray-500">
+      <footer className="bg-black py-12 border-t border-neutral-800 text-center text-gray-500">
         <div className="container mx-auto px-6">
-          <h2 className="text-2xl font-bold text-brand-red mb-4">Cole's Detailing</h2>
-          <p className="mb-2">Mobile Detailing Serving Oakland, Wayne & Macomb County</p>
-          <p className="mb-6 font-bold text-white text-xl">248-480-5603</p>
-          <p className="text-sm">Solomoncole456@gmail.com</p>
-          <p className="text-xs mt-8">© {new Date().getFullYear()} Cole's Detailing. All rights reserved.</p>
+          <h2 className="text-2xl font-bold text-brand mb-4">{business.name}</h2>
+          <p className="mb-2">Serving {business.serviceAreas.join(", ")}</p>
+          <p className="mb-6 font-bold text-white text-xl">{business.phone}</p>
+          <p className="text-sm">{business.hours}</p>
+          <p className="text-xs mt-8">© {new Date().getFullYear()} {business.name}. All rights reserved.</p>
         </div>
       </footer>
     </main>
