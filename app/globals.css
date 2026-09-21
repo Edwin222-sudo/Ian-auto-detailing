@@ -1,32 +1,5 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
 :root {
-  --foreground-rgb: 255, 255, 255;
-  --background-start-rgb: 0, 0, 0;
-  --background-end-rgb: 20, 20, 20;
-}
-
-body {
-  color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
-}
-
-.text-brand-red {
-  color: #dc2626; /* Tailwind red-600 */
-}
-
-.bg-brand-red {
-  background-color: #dc2626;
-}
-
-/* Smooth scrolling for anchor links */
-html {
-  scroll-behavior: smooth;
+  --brand-primary: #c8102e;      /* Maple Leaf red — change per customer */
+  --brand-primary-dark: #8b0a1f;
+  --brand-bg: #0a0a0a;
 }
